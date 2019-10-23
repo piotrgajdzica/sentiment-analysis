@@ -43,6 +43,11 @@ class Tweet(BaseModel):
     retweeted_from = ForeignKeyField('self', backref='retweets', null=True)
 
 
+class UserMentions(BaseModel):
+    tweet = ForeignKeyField(Tweet, on_delete='CASCADE', backref='usermentions')
+    user = ForeignKeyField(User, on_delete='CASCADE', backref='usermentions')
+
+
 class UserNotFoundException(Exception):
     pass
 
