@@ -1,13 +1,13 @@
 import json
-
-import requests
-from twython import Twython, endpoints
+from twitter_api import query_api
+import db.dao as dao
 
 
 def pretty_print(d):
     print(json.dumps(d, indent=4, sort_keys=True))
 
 
+'''
 def main():
     APP_KEY = '3bW9nlsI1KFNGemyKABIExJvw'
     APP_SECRET = 'BIFXOGX6gRPQZ38KAgaH49cZSxVsIV0TXJcd2gRPA1XQvgiD0w'
@@ -20,8 +20,9 @@ def main():
     twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
     print(twitter)
 
-    api_url = 'https://api.twitter.com/1.1/tweets/search/30day/production.json'
-    constructed_url = twitter.construct_api_url(api_url, query='brexit from:borisjohnson', maxResults=10)
+    #  api_url = 'https://api.twitter.com/1.1/tweets/search/30day/production.json'
+    api_url = 'https://api.twitter.com/1.1/search/tweets.json'
+    constructed_url = twitter.construct_api_url(api_url, q='brexit from:borisjohnson', maxResults=10)  # query instead of q for premium
     print(constructed_url)
     response = requests.get(constructed_url, headers={
         'Authorization': 'Bearer %s' % ACCESS_TOKEN
@@ -37,6 +38,13 @@ def main():
     print(len(results['results']))
     print(results.keys())
     print(results['requestParameters'])
+'''
+
+
+def main():
+    users, tweets, hashtags, urls, mentions = query_api('brexit from:borisjohnson', max_pages=2)
+    dao.add_bulk_objects(users, tweets, hashtags, urls, mentions)
+
 
 if __name__ == '__main__':
     main()
