@@ -1,16 +1,18 @@
-from twitterapi.db.dao import db, User, Tweet
+from twitterapi.db.dao import db, User, Tweet, UserMentions, Hashtag, Url
 
 
 def run_migration():
     db.connect()
-    db.create_tables([User, Tweet])
+    db.create_tables([User, Tweet, UserMentions, Hashtag, Url])
     db.close()
 
 
 def clear_database():
     db.connect()
-    db.drop_tables([User, Tweet])
-    db.create_tables([User, Tweet])
+    db.execute_sql("SET FOREIGN_KEY_CHECKS=0")
+    db.drop_tables([User, Tweet, UserMentions, Hashtag, Url])
+    db.create_tables([User, Tweet, UserMentions, Hashtag, Url])
+    db.execute_sql("SET FOREIGN_KEY_CHECKS=1")
     db.close()
 
 

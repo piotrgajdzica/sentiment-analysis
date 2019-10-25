@@ -1,42 +1,125 @@
 import json
 
 import requests
-from twython import Twython, endpoints
+
+from twython import Twython
+
+from twitterapi.db import dao
+from twitterapi.db.migrate_database import clear_database
+from twitterapi.twitter_api import query_api
 
 
 def pretty_print(d):
     print(json.dumps(d, indent=4, sort_keys=True))
 
 
+def fetch_query(query):
+    # users, tweets, hashtags, urls, mentions = query_api('brexit from:borisjohnson', max_pages=20)
+    users, tweets, hashtags, urls, mentions = query_api(query, max_pages=100)
+    print('stats for %s' % query)
+    print('users', len(users))
+    print('tweets', len(tweets))
+    print('hashtags', len(hashtags))
+    print('urls', len(urls))
+    print('mentions', len(mentions))
+    dao.add_bulk_objects(users, tweets, hashtags, urls, mentions)
+
+def fetch_queries(queries):
+    for query in queries:
+        fetch_query(query)
+
+
 def main():
-    APP_KEY = '3bW9nlsI1KFNGemyKABIExJvw'
-    APP_SECRET = 'BIFXOGX6gRPQZ38KAgaH49cZSxVsIV0TXJcd2gRPA1XQvgiD0w'
+    hashtags = [
+        'BritishIndependence',
+        'Brexit',
+        'WithdrawalAgreementBill',
+        'BrexitVote',
+        'GetBrexitDone',
+        'letsgetbrexitdone',
+        'BrexitDeal',
+        'StandUp4Brexit',
+        'BrexitBill',
+        'TakeBackControl',
+        'DemocracyBlockers',
+        'NoDeal',
+        'CleanBreakBrexit',
+        'BREXITCAST',
+        'VoteTheDealDown',
+        'LeaveOct31st',
+        'Resister',
+        'StopBrexit',
+        'SpentLonger',
+        'SellOutDeal',
+        'VoteDownTheDeal',
+    ]
+    hastag_queries = ['#%s' % hashtag for hashtag in hashtags]
+    users = [
+        'brexitparty_uk',
+        'Michael_Heaver',
+        'drdavidbull',
+        'Nigel_Farage',
+        'Daily_Express',
+        'LBC',
+        'jeremycorbyn',
+        'Conservatives',
+        'JackieDP',
+        'Mark_J_Harper',
+        'piersmorgan',
+        'CamillaTominey',
+        'StandUp4Brexit',
+        'BrexitCentral',
+        'RobertBuckland',
+        'SkyNews',
+        'RichardBurgon',
+        'CommonsJustice',
+        'bernardjenkin',
+        'eucopresident',
+        'JustinTrudeau',
+        'AWMurrison',
+        'darrengrimes_',
+        'MoggMentum',
+        'CarolineFlintMP',
+        'RupertLowe10',
+        'KateHoeyMP',
+        'johnredwood',
+        'MartinDaubney',
+        'ManfredWeber',
+        'bbcnews',
+        'BBCPolitics',
+        'TiceRichard',
+        'georgegalloway',
+        'LeaveEUOfficial',
+        'MelanieLatest',
+        'BorisJohnson',
+        'theresa_may',
+        'DominicRaab',
+        'spaceangel1964',
+        'UKLabour',
+        'Another_Europe',
+        'SteveBarclay',
+        'CatMcKinnell',
+        'Marcus4Nuneaton',
+        'Royston_Smith',
+        'benhowlettuk',
+        'CamillaTominey',
+        'Michael_Heaver',
+        'benhabib6',
+        'zatzi',
+        'MartinDaubney',
+        'SteveBakerHW',
+        'DavidDavisMP',
+        'Nikkipage44',
+        'KateHoeyMP',
+        'LanceForman',
+        'BrexitAlex',
+        'june_mummery',
+        'JkmMikke',
+    ]
+    user_queries = ['brexit from:%s' % user for user in users]
+    fetch_queries(hastag_queries)
+    fetch_queries(user_queries)
 
-    twitter = Twython(APP_KEY, APP_SECRET, oauth_version=2)
-    # ACCESS_TOKEN = twitter.obtain_access_token()
-    ACCESS_TOKEN = 'AAAAAAAAAAAAAAAAAAAAADBcAQEAAAAACmObvD8B4MwW4Bk%2B%2FvMcs75QuvA%3DV6QxfukBXCbsrDBykrZiNklTnjr2tY3A9AubSFDw1T19kh9OJY'
-    print(ACCESS_TOKEN)
-
-    twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
-    print(twitter)
-
-    api_url = 'https://api.twitter.com/1.1/tweets/search/30day/production.json'
-    constructed_url = twitter.construct_api_url(api_url, query='brexit from:borisjohnson', maxResults=10)
-    print(constructed_url)
-    response = requests.get(constructed_url, headers={
-        'Authorization': 'Bearer %s' % ACCESS_TOKEN
-    })
-    print(response.json())
-    print(response.status_code)
-    results = response.json()
-    # results = twitter.search(q='brexit from:BorisJohnson', include_entities=1, lang='en', count=100, result_type='popular')
-    # # results = twitter.search(q='q="to:$tweeterusername", sinceId = $tweetId', include_entities=1, lang='en', since_id=, count=100)
-    # # results = twitter.search(q='from:borisjohnson', include_entities=1, lang='en', count=100)
-    # # results = twitter.search(q='from:aa, brexit', result_type='popular', max_id=1183041795334250496, include_entities=1, )
-    print(pretty_print(results))
-    print(len(results['results']))
-    print(results.keys())
-    print(results['requestParameters'])
 
 if __name__ == '__main__':
     main()
