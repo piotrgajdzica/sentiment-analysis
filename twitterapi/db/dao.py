@@ -1,3 +1,5 @@
+import string
+
 from peewee import *
 
 import twitterapi.db.database_access as db
@@ -128,7 +130,6 @@ def add_tweet(tweet):
                 'timestamp': tweet.timestamp,
                 'likes': tweet.likes,
                 'is_retweet': tweet.is_retweet,
-                # retweeted_from=Tweet.select().where(Tweet.id == tweet.retweet_id) if len(tweet.retweet_id) > 0 else None,
             }
         )
 
@@ -157,6 +158,10 @@ def select_minimal_user_ids():
     return set([user.id for user in User.select(User.id).where(User.full_name==None)])
 
 
+def select_minimal_users(ids):
+    return set([user for user in User.select().where(User.full_name==None and User.id in ids)])
+
+
 def select_all_users():
     return User.select()
 
@@ -182,9 +187,16 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
     users_to_insert = [user for user in users.values() if user.id not in user_ids]
     User.bulk_create(users_to_insert, 1000)
 
-    minimal_user_ids = select_minimal_user_ids()
-    users_to_update = [user for user in users.values() if user.id in minimal_user_ids]
-    User.bulk_update(users_to_update, [
+    minimal_users = select_minimal_users(users.keys())
+    for user in minimal_users:
+        user.full_name = users[user.id].full_name
+        user.location = users[user.id].location
+        user.date_joined = users[user.id].date_joined
+        user.followers = users[user.id].followers
+        user.likes = users[user.id].likes
+        user.lists = users[user.id].lists
+        user.is_verified = users[user.id].is_verified
+    User.bulk_update(minimal_users, [
             User.full_name,
             User.location,
             User.date_joined,
@@ -218,12 +230,14 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
 
     new_users = list()
     user_ids = user_ids.union([user.id for user in users_to_insert])
+    mentions_to_insert = []
     for user_mention in mentions:
         if user_mention.user not in user_ids:
             new_user = create_minimal_user_object(user_mention.user, user_mention.full_name)
-            new_users.append(new_user)
-            user_ids.add(new_user.id)
-
+            if any([letter in string.ascii_letters for letter in new_user.username]):
+                new_users.append(new_user)
+                user_ids.add(new_user.id)
+                mentions_to_insert.append(user_mention)
     User.bulk_create(new_users, 1000)
 
-    UserMentions.bulk_create(mentions, 1000)
+    UserMentions.bulk_create(mentions_to_insert, 1000)
