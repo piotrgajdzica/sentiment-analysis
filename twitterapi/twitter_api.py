@@ -74,13 +74,12 @@ def query_api(query, max_pages=1):
     twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
     api_url = 'https://api.twitter.com/1.1/search/tweets.json'
     # api_url = 'https://api.twitter.com/1.1/tweets/search/30day/production.json'
-    constructed_url = twitter.construct_api_url(api_url, q=query, maxResults=10)
-
+    constructed_url = twitter.construct_api_url(api_url, q=query, maxResults=100)
+    time.sleep(60)
     response = requests.get(constructed_url, headers={
         'Authorization': 'Bearer %s' % ACCESS_TOKEN
     })
     results = response.json()
-
     for result in results['statuses']:
         parse_tweet(result, users, tweets, hashtags, urls, mentions)
 
@@ -91,6 +90,7 @@ def query_api(query, max_pages=1):
                 break
 
             constructed_url = api_url + search_metadata['next_results']
+            time.sleep(60)
             response = requests.get(constructed_url, headers={
                 'Authorization': 'Bearer %s' % ACCESS_TOKEN
             })

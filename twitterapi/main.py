@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import traceback
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
@@ -21,7 +22,10 @@ def fetch_query(query):
     print('hashtags', len(hashtags))
     print('urls', len(urls))
     print('mentions', len(mentions))
-    dao.add_bulk_objects(users, tweets, hashtags, urls, mentions)
+    try:
+        dao.add_bulk_objects(users, tweets, hashtags, urls, mentions)
+    except Exception:
+        traceback.print_exc()
 
 def fetch_queries(queries):
     for query in queries:
