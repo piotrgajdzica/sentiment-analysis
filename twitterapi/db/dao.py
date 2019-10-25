@@ -212,8 +212,11 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
                               [tweet.quoted_from for tweet in tweets.values() if tweet.quoted_from is not None])
     original_tweets = [tweet for tweet in tweets.values() if tweet.id in original_tweets_ids and tweet.id not in
                        tweet_ids]
+
     tweets_to_insert = [tweet for tweet in tweets_to_insert if tweet.id not in original_tweets_ids]
+    db.execute_sql("SET FOREIGN_KEY_CHECKS=0")
     Tweet.bulk_create(original_tweets, 1000)
+    db.execute_sql("SET FOREIGN_KEY_CHECKS=1")
 
     for tweet in tweets_to_insert:
         if tweet.likes is None:
