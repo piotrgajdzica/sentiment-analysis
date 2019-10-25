@@ -10,7 +10,7 @@ def run_migration():
 def clear_database():
     db.connect()
     db.execute_sql("SET FOREIGN_KEY_CHECKS=0")
-    db.drop_tables([[User, Tweet, UserMentions, Hashtag, Url]])
+    db.drop_tables([User, Tweet, UserMentions, Hashtag, Url])
     db.create_tables([User, Tweet, UserMentions, Hashtag, Url])
     db.execute_sql("SET FOREIGN_KEY_CHECKS=1")
     db.close()

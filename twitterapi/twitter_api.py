@@ -1,3 +1,5 @@
+import time
+
 import requests
 from twython import Twython
 
@@ -35,7 +37,9 @@ class Tweet:
         self.id = tweet_data['id']
         self.text = tweet_data['text']
         self.retweets = tweet_data['retweet_count']
-        self.timestamp = tweet_data['created_at']
+        # self.timestamp = tweet_data['created_at']
+        self.timestamp = time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(tweet_data['created_at'],'%a %b %d %H:%M:%S +0000 %Y'))
+        self.likes = tweet_data['favorite_count']
         self.is_retweet = 'retweeted_status' in tweet_data.keys()
         self.is_quote = tweet_data['is_quote_status']
 
@@ -78,7 +82,6 @@ def query_api(query, max_pages=1):
     response = requests.get(constructed_url, headers={
         'Authorization': 'Bearer %s' % ACCESS_TOKEN
     })
-
     results = response.json()
 
     for result in results['statuses']:
@@ -139,9 +142,10 @@ def parse_tweet(tweet_data, users, tweets, hashtags, urls, mentions):
         tweet.retweeted_from = original.id
 
     if tweet.is_quote:
-        quoted_status = tweet_data['quoted_status']
-        original = parse_tweet(quoted_status, users, tweets, hashtags, urls, mentions)
-        tweet.quoted_from_user = original.user
-        tweet.quoted_from = original.id
+        quoted_status = tweet_data.get('quoted_status', None)
+        if quoted_status is not None:
+            original = parse_tweet(quoted_status, users, tweets, hashtags, urls, mentions)
+            tweet.quoted_from_user = original.user
+            tweet.quoted_from = original.id
     tweets[tweet.id] = tweet
     return tweet

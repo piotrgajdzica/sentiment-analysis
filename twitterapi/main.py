@@ -1,6 +1,12 @@
 import json
-from twitter_api import query_api
-import db.dao as dao
+
+import requests
+
+from twython import Twython
+
+from twitterapi.db import dao
+from twitterapi.db.migrate_database import clear_database
+from twitterapi.twitter_api import query_api
 
 
 def pretty_print(d):
@@ -40,11 +46,17 @@ def main():
     print(results['requestParameters'])
 '''
 
-
 def main():
-    users, tweets, hashtags, urls, mentions = query_api('brexit from:borisjohnson', max_pages=2)
+    # users, tweets, hashtags, urls, mentions = query_api('brexit from:borisjohnson', max_pages=20)
+    users, tweets, hashtags, urls, mentions = query_api('#GetBrexitDone', max_pages=20)
+    print(len(users))
+    print(len(tweets))
+    print(len(hashtags))
+    print(len(urls))
+    print(len(mentions))
     dao.add_bulk_objects(users, tweets, hashtags, urls, mentions)
 
 
 if __name__ == '__main__':
+    clear_database()
     main()

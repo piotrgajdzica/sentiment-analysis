@@ -31,12 +31,12 @@ class Tweet(BaseModel):
     id = BigIntegerField(primary_key=True)
     user = ForeignKeyField(User, backref='tweets')
     text = TextField()
-    url = CharField(max_length=1024)
+    url = CharField(max_length=1024, null=True)
     has_video = BooleanField()
     has_image = BooleanField()
     retweets = IntegerField()
     timestamp = DateTimeField()
-    replies = IntegerField()
+    replies = IntegerField(default=0)
     likes = IntegerField()
     is_retweet = BooleanField()
     retweeted_from_user = ForeignKeyField(User, backref='retweets', null=True)
@@ -192,6 +192,12 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
                        tweet_ids]
     tweets_to_insert = [tweet for tweet in tweets_to_insert if tweet.id not in original_tweets_ids]
     Tweet.bulk_create(original_tweets, 1000)
+
+    for tweet in tweets_to_insert:
+        if tweet.likes is None:
+            print('zero likes')
+            tweet.likes = 0
+
     Tweet.bulk_create(tweets_to_insert, 1000)
 
     hashtag_texts = set([hashtag.text for hashtag in Hashtag.select(Hashtag.text)])
@@ -204,7 +210,10 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
     user_ids = user_ids.union([user.id for user in users_to_insert])
     for user_mention in mentions:
         if user_mention.user not in user_ids:
-            new_users.append(create_minimal_user_object(user_mention.user, user_mention.full_name))
+            new_user = create_minimal_user_object(user_mention.user, user_mention.full_name)
+            new_users.append(new_user)
+            user_ids.add(new_user.id)
+
     User.bulk_create(new_users, 1000)
 
     UserMentions.bulk_create(mentions, 1000)
