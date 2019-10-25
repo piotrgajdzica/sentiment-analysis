@@ -1,11 +1,10 @@
 import json
+import os
+import sys
 
-import requests
-
-from twython import Twython
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 from twitterapi.db import dao
-from twitterapi.db.migrate_database import clear_database
 from twitterapi.twitter_api import query_api
 
 
