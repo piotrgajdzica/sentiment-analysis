@@ -5,24 +5,21 @@ from twython import Twython
 
 
 class User:
-    blog = None
-    tweets = None
-    likes = None
 
     def __init__(self, user_data):
         self.full_name = user_data['name']
         self.followers = user_data['followers_count']
         self.id = user_data['id']
         self.location = user_data['location']
-        self.date_joined = user_data['created_at']
+        self.date_joined = time.strftime('%Y-%m-%d %H:%M:%S', time.strptime(user_data['created_at'],'%a %b %d %H:%M:%S +0000 %Y'))
         self.following = user_data['following']
         self.is_verified = user_data['verified']
         self.lists = user_data['listed_count']
         self.username = user_data['screen_name']
+        self.likes = user_data['favourites_count']
 
 
 class Tweet:
-    replies = None
     user = None
     likes = None
     url = None

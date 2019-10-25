@@ -17,10 +17,7 @@ class User(BaseModel):
     username = CharField(unique=True)
     full_name = CharField(null=True)
     location = CharField(null=True)
-    blog = CharField(null=True)
     date_joined = DateField(null=True)
-    tweets = IntegerField(null=True)
-    following = IntegerField(null=True)
     followers = IntegerField(null=True)
     likes = IntegerField(null=True)
     lists = IntegerField(null=True)
@@ -36,7 +33,6 @@ class Tweet(BaseModel):
     has_image = BooleanField()
     retweets = IntegerField()
     timestamp = DateTimeField()
-    replies = IntegerField(default=0)
     likes = IntegerField()
     is_retweet = BooleanField()
     retweeted_from_user = ForeignKeyField(User, backref='retweets', null=True)
@@ -86,7 +82,6 @@ def create_tweet_object(tweet, user, retweeted_from_user):
         user=user,
         retweeted_from_user=retweeted_from_user,
         timestamp=tweet.timestamp,
-        replies=tweet.replies,
         likes=tweet.likes,
         is_retweet=tweet.is_retweet,
     )
@@ -131,7 +126,6 @@ def add_tweet(tweet):
                 'retweets': tweet.retweets,
                 'user': user,
                 'timestamp': tweet.timestamp,
-                'replies': tweet.replies,
                 'likes': tweet.likes,
                 'is_retweet': tweet.is_retweet,
                 # retweeted_from=Tweet.select().where(Tweet.id == tweet.retweet_id) if len(tweet.retweet_id) > 0 else None,
