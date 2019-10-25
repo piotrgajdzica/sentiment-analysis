@@ -154,7 +154,7 @@ def add_user(user):
 
 
 def select_minimal_user_ids():
-    return set([user.id for user in User.select(User.id).where(full_name=None)])
+    return set([user.id for user in User.select(User.id).where(User.full_name==None)])
 
 
 def select_all_users():
@@ -183,8 +183,16 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
     User.bulk_create(users_to_insert, 1000)
 
     minimal_user_ids = select_minimal_user_ids()
-    users_to_update = [user for user in users if user.id in minimal_user_ids]
-    User.bulk_update(users_to_update, 1000)
+    users_to_update = [user for user in users.values() if user.id in minimal_user_ids]
+    User.bulk_update(users_to_update, [
+            User.full_name,
+            User.location,
+            User.date_joined,
+            User.followers,
+            User.likes,
+            User.lists,
+            User.is_verified,
+        ], 1000)
 
     tweet_ids = set([tweet.id for tweet in Tweet.select(Tweet.id)])
     tweets_to_insert = [tweet for tweet in tweets.values() if tweet.id not in tweet_ids]
