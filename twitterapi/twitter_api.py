@@ -1,3 +1,4 @@
+import json
 import time
 
 import requests
@@ -67,7 +68,7 @@ def query_api(query, max_pages=1):
     urls = list()
     hashtags = dict()
     mentions = list()
-
+    cache = open('%s.txt' % query, 'w')
     APP_KEY = '3bW9nlsI1KFNGemyKABIExJvw'
     ACCESS_TOKEN = 'AAAAAAAAAAAAAAAAAAAAADBcAQEAAAAACmObvD8B4MwW4Bk%2B%2FvMcs75QuvA%3DV6QxfukBXCbsrDBykrZiNklTnjr2tY3A9AubSFDw1T19kh9OJY'
 
@@ -75,10 +76,12 @@ def query_api(query, max_pages=1):
     api_url = 'https://api.twitter.com/1.1/search/tweets.json'
     # api_url = 'https://api.twitter.com/1.1/tweets/search/30day/production.json'
     constructed_url = twitter.construct_api_url(api_url, q=query, maxResults=100)
-    time.sleep(60)
     response = requests.get(constructed_url, headers={
         'Authorization': 'Bearer %s' % ACCESS_TOKEN
     })
+    time.sleep(60)
+    cache.write(json.dumps(response.json()))
+    cache.write('\n')
     results = response.json()
     for result in results['statuses']:
         parse_tweet(result, users, tweets, hashtags, urls, mentions)
@@ -95,11 +98,14 @@ def query_api(query, max_pages=1):
                 'Authorization': 'Bearer %s' % ACCESS_TOKEN
             })
 
+            cache.write(json.dumps(response.json()))
+            cache.write('\n')
             results = response.json()
             search_metadata = results['search_metadata']
 
             for result in results['statuses']:
                 parse_tweet(result, users, tweets, hashtags, urls, mentions)
+    cache.close()
     return users, tweets, hashtags, urls, mentions
 
 
