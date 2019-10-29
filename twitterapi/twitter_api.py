@@ -109,6 +109,20 @@ def query_api(query, max_pages=1):
     return users, tweets, hashtags, urls, mentions
 
 
+def fetch_from_cache(filename):
+    users = dict()
+    tweets = dict()
+    urls = list()
+    hashtags = dict()
+    mentions = list()
+    for line in open(filename).readlines():
+        results = json.loads(line)
+        for result in results['statuses']:
+            parse_tweet(result, users, tweets, hashtags, urls, mentions)
+
+    return users, tweets, hashtags, urls, mentions
+
+
 def parse_tweet(tweet_data, users, tweets, hashtags, urls, mentions):
     user_data = tweet_data['user']
     user = User(user_data)

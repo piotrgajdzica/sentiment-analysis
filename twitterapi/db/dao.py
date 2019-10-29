@@ -16,7 +16,7 @@ class BaseModel(Model):
 
 class User(BaseModel):
     id = BigIntegerField(primary_key=True)
-    username = CharField(unique=True)
+    username = CharField()
     full_name = CharField(null=True)
     location = CharField(null=True)
     date_joined = DateField(null=True)
