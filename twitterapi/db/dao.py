@@ -58,6 +58,17 @@ class Hashtag(BaseModel):
     text = CharField(max_length=1024)
 
 
+class TweetHashtag(BaseModel):
+    tweet = ForeignKeyField(Tweet, on_delete='CASCADE', backref='tweethashtag')
+    hashtag = ForeignKeyField(Hashtag, on_delete='CASCADE', backref='tweethashtag')
+
+
+class TweetsHashtags:
+    def __init__(self, tweet_id, hashtag_id):
+        self.tweet = tweet_id
+        self.hashtag = hashtag_id
+
+
 class UserNotFoundException(Exception):
     pass
 
@@ -170,6 +181,10 @@ def select_all_tweets():
     return Tweet.select()
 
 
+def select_all_tweet_hashtags():
+    return TweetHashtag.select()
+
+
 def select_all_hashtags():
     return Hashtag.select()
 
@@ -229,6 +244,16 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
     hashtags_to_insert = [hashtag for hashtag in hashtags.values() if hashtag.text not in hashtag_texts]
     Hashtag.bulk_create(hashtags_to_insert, 1000)
 
+
+    tweet_hashtags_to_insert = list()
+    tweet_hashtag_tweet_ids = set([th.tweet for th in TweetHashtag.select(TweetHashtag.tweet)])
+    for tag in hashtags:
+        if tag.tweet not in tweet_hashtag_tweet_ids:
+            tags = dict([(hashtag.text, hashtag.id) for hashtag in select_all_hashtags()])
+            tweet_hashtags_to_insert.append(TweetsHashtags(tag.tweet, tags[tag.text]))
+    TweetHashtag.bulk_create(tweet_hashtags_to_insert, 1000)
+
+
     Url.bulk_create(urls, 1000)
 
     new_users = list()
@@ -244,3 +269,22 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
     User.bulk_create(new_users, 1000)
 
     UserMentions.bulk_create(mentions_to_insert, 1000)
+
+
+'''
+import re
+
+
+tags = dict([(hashtag.text, hashtag.id) for hashtag in select_all_hashtags()])
+hashtags_tweets = list()
+for tweet in select_all_tweets():
+    matches = re.findall('#.+?(?:[\\s\\\\n]|$)', tweet.text)
+    for match in matches:
+        if match[-1] in " \\\n":
+            match = match[:-1]
+        match = match[1:]
+        if match in tags.keys():
+            hashtags_tweets.append(TweetsHashtags(tweet.id, tags[match]))
+
+TweetHashtag.bulk_create(hashtags_tweets, 1000)
+'''
