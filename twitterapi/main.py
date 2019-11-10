@@ -125,4 +125,12 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
+    # for a in dao.count_tweets_by_hashtags():
+    #     print(a.text, a.count)
+    # for a in dao.count_tweets_by_users():
+    #     print(a.username, a.count)
+    # for a in dao.list_users_by(dao.User.likes):
+    #     print(a.username, a.likes)
+    for a in dao.count_retweets_by_users():
+        print(a.username, a.count)

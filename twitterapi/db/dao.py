@@ -197,6 +197,36 @@ def select_all_urls():
     return Url.select()
 
 
+def list_users_by(field):
+    return User\
+        .select(User.username, field)\
+        .order_by(field.desc())
+
+
+def count_tweets_by_hashtags():
+    return Hashtag\
+        .select(Hashtag.text, fn.COUNT(TweetHashtag.id).alias('count'))\
+        .join(TweetHashtag)\
+        .group_by(Hashtag.text)\
+        .order_by(fn.COUNT(TweetHashtag.id).desc())
+
+
+def count_tweets_by_users():
+    return User\
+        .select(User.username, fn.COUNT(Tweet.id).alias('count'))\
+        .join(Tweet, on=(Tweet.user == User.id))\
+        .group_by(User.username)\
+        .order_by(fn.COUNT(Tweet.id).desc())
+
+
+def count_retweets_by_users():
+    return User\
+        .select(User.username, fn.SUM(Tweet.retweets).alias('count'))\
+        .join(Tweet, on=(Tweet.user == User.id))\
+        .group_by(User.username)\
+        .order_by(fn.SUM(Tweet.retweets).desc())
+
+
 def add_bulk_objects(users, tweets, hashtags, urls, mentions):
     user_ids = set([user.id for user in User.select(User.id)])
     users_to_insert = [user for user in users.values() if user.id not in user_ids]
