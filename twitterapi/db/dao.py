@@ -54,8 +54,12 @@ class Url(BaseModel):
 
 
 class Hashtag(BaseModel):
-    tweet = ForeignKeyField(Tweet, on_delete='CASCADE', backref='hashtags')
     text = CharField(max_length=1024)
+
+
+class HashtagTweet(Model):
+    hashtag = ForeignKeyField(Hashtag)
+    tweet = ForeignKeyField(Tweet)
 
 
 class UserNotFoundException(Exception):
