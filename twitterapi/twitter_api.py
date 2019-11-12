@@ -75,7 +75,7 @@ def query_api(query, max_pages=1):
     twitter = Twython(APP_KEY, access_token=ACCESS_TOKEN)
     api_url = 'https://api.twitter.com/1.1/search/tweets.json'
     # api_url = 'https://api.twitter.com/1.1/tweets/search/30day/production.json'
-    constructed_url = twitter.construct_api_url(api_url, q=query, maxResults=100)
+    constructed_url = twitter.construct_api_url(api_url, q=query, maxResults=1000)
     response = requests.get(constructed_url, headers={
         'Authorization': 'Bearer %s' % ACCESS_TOKEN
     })

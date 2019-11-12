@@ -6,7 +6,7 @@ import traceback
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 from twitterapi.db import dao
-from twitterapi.twitter_api import query_api
+from twitterapi.twitter_api import query_api, fetch_from_cache
 
 
 def pretty_print(d):
@@ -30,6 +30,21 @@ def fetch_query(query):
 def fetch_queries(queries):
     for query in queries:
         fetch_query(query)
+
+
+def fetch_cache(dir):
+    for file in os.listdir(dir):
+        users, tweets, hashtags, urls, mentions = fetch_from_cache(os.path.join(dir, file))
+        print('stats for %s' % file)
+        print('users', len(users))
+        print('tweets', len(tweets))
+        print('hashtags', len(hashtags))
+        print('urls', len(urls))
+        print('mentions', len(mentions))
+        try:
+            dao.add_bulk_objects(users, tweets, hashtags, urls, mentions)
+        except Exception:
+            traceback.print_exc()
 
 
 def main():
@@ -126,3 +141,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+    # fetch_cache('../cache')
