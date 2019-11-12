@@ -1,9 +1,9 @@
-from twitterapi.db.dao import db, User, Tweet, UserMentions, Hashtag, Url
+from twitterapi.db.dao import db, User, Tweet, UserMentions, Hashtag, Url, HashtagTweet
 
 
 def run_migration():
     db.connect()
-    db.create_tables([User, Tweet, UserMentions, Hashtag, Url])
+    db.create_tables([User, Tweet, UserMentions, Hashtag, Url, HashtagTweet])
     db.close()
 
 

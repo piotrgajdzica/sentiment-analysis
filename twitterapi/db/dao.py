@@ -57,9 +57,14 @@ class Hashtag(BaseModel):
     text = CharField(max_length=1024)
 
 
-class HashtagTweet(Model):
-    hashtag = ForeignKeyField(Hashtag)
-    tweet = ForeignKeyField(Tweet)
+class HashtagTweet(BaseModel):
+    hashtag = ForeignKeyField(Hashtag, on_delete='CASCADE', backref='tweets')
+    tweet = ForeignKeyField(Tweet, on_delete='CASCADE', backref='hashtags')
+
+    class Meta:
+        indexes = (
+            # create a unique on from/to/date
+            (('hashtag', 'tweet'), True),)
 
 
 class UserNotFoundException(Exception):
@@ -172,6 +177,10 @@ def select_all_users():
 
 def select_all_tweets():
     return Tweet.select()
+
+
+def select_sample_tweets(n=100):
+    return Tweet.select().order_by(fn.Rand()).limit(n)
 
 
 def select_all_hashtags():
