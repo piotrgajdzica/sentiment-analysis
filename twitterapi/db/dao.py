@@ -195,6 +195,30 @@ def select_all_urls():
     return Url.select()
 
 
+def select_retweets_edges():
+    return Tweet.select(Tweet.user, Tweet.retweeted_from_user, fn.COUNT(Tweet.user).alias('count')).\
+        where(Tweet.is_retweet).\
+        group_by(Tweet.user, Tweet.retweeted_from_user).limit(100)
+
+
+def select_quotes_edges():
+    return Tweet.select(Tweet.user, Tweet.quoted_from_user, fn.COUNT(Tweet.user).alias('count')).\
+        where(Tweet.quoted_from).\
+        group_by(Tweet.user, Tweet.quoted_from_user).limit(100)
+
+
+def select_mentions_edges():
+    return UserMentions.select(UserMentions.user, Tweet.user, fn.COUNT(UserMentions.user).alias('count')).\
+        join(Tweet).\
+        group_by(Tweet.user, UserMentions.user).limit(100)
+
+
+def select_hashtags_edges():
+    return HashtagTweet.select(Tweet.user, HashtagTweet.hashtag, fn.COUNT(HashtagTweet.hashtag).alias('count')).\
+        join(Tweet).\
+        group_by(Tweet.user, HashtagTweet.hashtag).limit(100)
+
+
 def add_bulk_objects(users, tweets, hashtags, urls, mentions):
     user_ids = set([user.id for user in User.select(User.id)])
     users_to_insert = [user for user in users.values() if user.id not in user_ids]
