@@ -14,6 +14,7 @@ date_end = date_start + datetime.timedelta(days=7)
 
 
 user_id_to_username = {}
+hashtag_id_to_text = {}
 
 
 def strip_username(username):
@@ -22,7 +23,10 @@ def strip_username(username):
 
 def fill_usernames():
     global user_id_to_username
+    global hashtag_id_to_text
     user_id_to_username = {user.id: strip_username(user.username) for user in dao.select_all_users()}
+    hashtag_id_to_text = {hashtag.id: hashtag.text for hashtag in dao.select_all_hashtags()}
+
 
 def write_users_csv():
     users = open('data/users.csv', 'w', encoding='utf-8')
@@ -76,7 +80,7 @@ def write_mentions_csv(start, end, limit):
 def write_hashtag_users_csv(start, end, limit):
     hashtag_users = open(('data/%s%s/hashtag_users.csv' % (start, end)).replace(' ', '_').replace(':', '_'), 'w', encoding='utf-8')
     lines = ['source;target;type;weight\n']
-    lines.extend(['{};{};directed;{}\n'.format(user_id_to_username[hashtag.tweet.user_id], hashtag.hashtag, hashtag.count) for hashtag in
+    lines.extend(['{};{};directed;{}\n'.format(user_id_to_username[hashtag.tweet.user_id], hashtag_id_to_text[hashtag.hashtag_id], hashtag.count) for hashtag in
                   dao.select_hashtags_edges(start, end, limit)])
 
     hashtag_users.writelines(lines)
