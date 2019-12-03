@@ -195,27 +195,30 @@ def select_all_urls():
     return Url.select()
 
 
-def select_retweets_edges():
+def select_retweets_edges(start, end):
     return Tweet.select(Tweet.user, Tweet.retweeted_from_user, fn.COUNT(Tweet.user).alias('count')).\
-        where(Tweet.is_retweet).\
+        where(Tweet.is_retweet). \
+        where(Tweet.timestamp < end, Tweet.timestamp > start). \
         group_by(Tweet.user, Tweet.retweeted_from_user).limit(100)
 
 
-def select_quotes_edges():
+def select_quotes_edges(start, end):
     return Tweet.select(Tweet.user, Tweet.quoted_from_user, fn.COUNT(Tweet.user).alias('count')).\
-        where(Tweet.quoted_from).\
+        where(Tweet.quoted_from, Tweet.timestamp < end, Tweet.timestamp > start).\
         group_by(Tweet.user, Tweet.quoted_from_user).limit(100)
 
 
-def select_mentions_edges():
+def select_mentions_edges(start, end):
     return UserMentions.select(UserMentions.user, Tweet.user, fn.COUNT(UserMentions.user).alias('count')).\
         join(Tweet).\
+        where(Tweet.timestamp < end, Tweet.timestamp > start).\
         group_by(Tweet.user, UserMentions.user).limit(100)
 
 
-def select_hashtags_edges():
+def select_hashtags_edges(start, end):
     return HashtagTweet.select(Tweet.user, HashtagTweet.hashtag, fn.COUNT(HashtagTweet.hashtag).alias('count')).\
-        join(Tweet).\
+        join(Tweet). \
+        where(Tweet.timestamp < end, Tweet.timestamp > start). \
         group_by(Tweet.user, HashtagTweet.hashtag).limit(100)
 
 
