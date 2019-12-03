@@ -3,7 +3,7 @@ import os
 import sys
 import time
 
-sys.path.append("/".join(os.path.realpath(__file__).split('/')[:-1]))
+sys.path.append("/".join(os.path.realpath(__file__).split('/')[:-2]))
 
 import twitterapi.db.dao as dao
 
