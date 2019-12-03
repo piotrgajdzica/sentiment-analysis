@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 import sys
 import time
 
@@ -12,12 +13,21 @@ date_start = datetime.datetime(2019, 10, 28)
 date_end = date_start + datetime.timedelta(days=7)
 
 
+user_id_to_username = {}
+
+
+def strip_username(username):
+    return re.sub(r'\W+', '', username)
+
+
+def fill_usernames():
+    global user_id_to_username
+    user_id_to_username = {user.id: strip_username(user.username) for user in dao.select_all_users()}
+
 def write_users_csv():
     users = open('data/users.csv', 'w', encoding='utf-8')
-    lines = ['id;username;full_name;location;date_joined;followers;likes;lists;is_verified\n']
-    lines.extend(['{};{};{};{};{};{};{};{};{}\n'.format(user.id, user.username, user.full_name or "", user.location or "",
-                                                        user.date_joined or "", user.followers or 0, user.likes or 0,
-                                                        user.lists or 0, user.is_verified or False)
+    lines = ['id;username\n']
+    lines.extend(['{};{}\n'.format(user.id, strip_username(user.username))
                   for user in dao.select_all_users()])
 
     users.writelines(lines)
@@ -36,7 +46,7 @@ def write_hashtags_csv():
 def write_retweets_csv(start, end, limit):
     retweets = open(('data/%s%s/retweets.csv' % (start, end)).replace(' ', '_').replace(':', '_'), 'w', encoding='utf-8')
     lines = ['source;target;type;weight\n']
-    lines.extend(['{};{};directed;{}\n'.format(retweet.user, retweet.retweeted_from_user, retweet.count)for retweet in
+    lines.extend(['{};{};directed;{}\n'.format(user_id_to_username[retweet.user_id], user_id_to_username[retweet.retweeted_from_user_id], retweet.count)for retweet in
                   dao.select_retweets_edges(start, end, limit)])
 
     retweets.writelines(lines)
@@ -46,7 +56,7 @@ def write_retweets_csv(start, end, limit):
 def write_quotes_csv(start, end, limit):
     quotes = open(('data/%s%s/quotes.csv' % (start, end)).replace(' ', '_').replace(':', '_'), 'w', encoding='utf-8')
     lines = ['source;target;type;weight\n']
-    lines.extend(['{};{};directed;{}\n'.format(quote.user, quote.quoted_from_user, quote.count) for quote in
+    lines.extend(['{};{};directed;{}\n'.format(user_id_to_username[quote.user_id], user_id_to_username[quote.quoted_from_user_id], quote.count) for quote in
                   dao.select_quotes_edges(start, end, limit)])
 
     quotes.writelines(lines)
@@ -56,7 +66,7 @@ def write_quotes_csv(start, end, limit):
 def write_mentions_csv(start, end, limit):
     mentions = open(('data/%s%s/mentions.csv' % (start, end)).replace(' ', '_').replace(':', '_'), 'w', encoding='utf-8')
     lines = ['source;target;type;weight\n']
-    lines.extend(['{};{};directed;{}\n'.format(mention.user, mention.tweet.user, mention.count)for mention in
+    lines.extend(['{};{};directed;{}\n'.format(user_id_to_username[mention.user_id], user_id_to_username[mention.tweet.user_id], mention.count)for mention in
                   dao.select_mentions_edges(start, end, limit)])
 
     mentions.writelines(lines)
@@ -66,7 +76,7 @@ def write_mentions_csv(start, end, limit):
 def write_hashtag_users_csv(start, end, limit):
     hashtag_users = open(('data/%s%s/hashtag_users.csv' % (start, end)).replace(' ', '_').replace(':', '_'), 'w', encoding='utf-8')
     lines = ['source;target;type;weight\n']
-    lines.extend(['{};{};directed;{}\n'.format(hashtag.tweet.user, hashtag.hashtag, hashtag.count) for hashtag in
+    lines.extend(['{};{};directed;{}\n'.format(user_id_to_username[hashtag.tweet.user_id], hashtag.hashtag, hashtag.count) for hashtag in
                   dao.select_hashtags_edges(start, end, limit)])
 
     hashtag_users.writelines(lines)
@@ -82,6 +92,7 @@ if __name__ == '__main__':
     start = time.time()
     write_users_csv()
     print(time.time() - start)
+    fill_usernames()
     while date_end < datetime.datetime(2019, 12, 3):
         try:
             os.makedirs(('data/%s%s/' % (date_start, date_end)).replace(' ', '_').replace(':', '_'))
