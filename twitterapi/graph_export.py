@@ -3,6 +3,7 @@ import os
 import re
 import sys
 import time
+import networkx as nx
 
 sys.path.append("/".join(os.path.realpath(__file__).split('/')[:-2]))
 
@@ -48,7 +49,7 @@ def write_hashtags_csv():
 
 
 def write_retweets_csv(start, end, limit):
-    retweets = open(('data/%s%s/retweets.csv' % (start, end)).replace(' ', '_').replace(':', '_'), 'w', encoding='utf-8')
+    retweets = open('retweets.csv', 'w', encoding='utf-8')
     lines = ['source;target;type;weight\n']
     lines.extend(['{};{};directed;{}\n'.format(user_id_to_username[retweet.user_id], user_id_to_username[retweet.retweeted_from_user_id], retweet.count)for retweet in
                   dao.select_retweets_edges(start, end, limit)])
@@ -87,8 +88,43 @@ def write_hashtag_users_csv(start, end, limit):
     hashtag_users.close()
 
 
-if __name__ == '__main__':
+def group_hashtag_users(start, end, limit):
+    fill_usernames()
+    hashtag_users = [(user_id_to_username[hashtag.tweet.user_id], hashtag_id_to_text[hashtag.hashtag_id]) for hashtag in
+                     dao.select_hashtags_edges(start, end, limit)]
+    G = nx.Graph()
+    G.add_nodes_from([name for hashtag in hashtag_users for name in hashtag])
+    G.add_edges_from([(hashtag[0], hashtag[1]) for hashtag in hashtag_users])
+    communities = list()
+    for i, community in enumerate(nx.algorithms.community.k_clique_communities(G, 2)):
+        for name in community:
+            communities.append((name, i))
+    nodes = open('nodes.csv', 'w', encoding='utf-8')
+    lines = ['id;community\n']
+    lines.extend(['{};{}\n'.format(name[0], name[1]) for name in communities])
+    nodes.writelines(lines)
+    nodes.close()
 
+
+def group_retweets(start, end, limit, k):
+    fill_usernames()
+    retweets = [(user_id_to_username[retweet.user_id], user_id_to_username[retweet.retweeted_from_user_id])for retweet in
+                dao.select_retweets_edges(start, end, limit)]
+    G = nx.Graph()
+    G.add_nodes_from([name for retweet in retweets for name in retweet])
+    G.add_edges_from([(retweet[0], retweet[1]) for retweet in retweets])
+    communities = list()
+    for i, community in enumerate(nx.algorithms.community.k_clique_communities(G, k)):
+        for name in community:
+            communities.append((name, i))
+    nodes = open('nodes.csv', 'w', encoding='utf-8')
+    lines = ['id;community\n']
+    lines.extend(['{};{}\n'.format(name[0], name[1]) for name in communities])
+    nodes.writelines(lines)
+    nodes.close()
+
+
+if __name__ == '__main__':
     limit = 10
     start = time.time()
     write_hashtags_csv()
