@@ -55,21 +55,28 @@ if __name__ == '__main__':
                                             multi_label=False
                                             )
     # define model
-    trainer = ModelTrainer(tagger, corpus)
+
+    checkpoint = os.path.join(tagger_output_directory, 'checkpoint.pt')
+    if os.path.isfile(checkpoint):
+        trainer = ModelTrainer.load_checkpoint(checkpoint, corpus)
+    else:
+        trainer = ModelTrainer(tagger, corpus)
+
+
 
     # train model
     trainer.train(
-        'data/tagger',
+        tagger_output_directory,
+        checkpoint=True,
         learning_rate=0.7,
         mini_batch_size=64,  # decrease to prevent graphic card memory errors. Increase to improve learning speed
-        monitor_test=True,
-        monitor_train=True,
-        patience=3,  # after how many unsuccessful epochs should we start annealing the learning rate
+        monitor_test=False,
+        monitor_train=False,
+        patience=2,  # after how many unsuccessful epochs should we start annealing the learning rate
         anneal_factor=0.5,
         embeddings_storage_mode='cpu',  # warning: if this leads to memory errors set to 'none'
-        max_epochs=3,
+        max_epochs=20,
         # use_amp=True,
     )
-
 
 
