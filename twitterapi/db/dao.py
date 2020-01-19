@@ -76,24 +76,12 @@ class UserNotFoundException(Exception):
     pass
 
 
-def set_tweet_sentiment(tweet: Tweet, value: str, confidence: float):
-    tweet.sentiment = value
-    tweet.sentiment_confidence = confidence
-    tweet.save()
-
-
-def set_tweet_political_views(tweet: Tweet, value: str, confidence: float):
-    tweet.political_views = value
-    tweet.political_views_confidence = confidence
-    tweet.save()
-
-
-
 def create_minimal_user_object(user_id, name):
     return User(
         id=int(user_id),
         username=name
     )
+
 
 
 def create_tweet_object(tweet, user, retweeted_from_user):
