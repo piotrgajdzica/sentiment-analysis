@@ -1,52 +1,48 @@
+import time
+
 from trainmodel.political_views.views_tagger import ViewsTagger
 from trainmodel.sentiment.sentiment_tagger import SentimentTagger
-from twitterapi.db.dao import select_sample_tweets_no_sentiment_no_political_views, count_tweets_no_sentiment_no_political_views
+from twitterapi.db.dao import select_sample_tweets_no_sentiment_no_political_views, \
+    count_tweets_no_sentiment_no_political_views
 from twitterapi.db.sentiment_helpers import tweet_prediction_bulk_update
-import time
 
 if __name__ == '__main__':
 
     sentiment_classifier = SentimentTagger()
     political_classifier = ViewsTagger()
-    n = 100
-    processed_tweets_counter = 0
-
-    all_tweets_count = count_tweets_no_sentiment_no_political_views()
+    batch_size = 10000
 
     start = time.time()
-    tweets = select_sample_tweets_no_sentiment_no_political_views(n)
-    end = time.time()
-    print('Read first %s tweets time: %s' % (n, (end - start)))
+    all_tweets_count = count_tweets_no_sentiment_no_political_views()
+    tweets = select_sample_tweets_no_sentiment_no_political_views(batch_size)
+    processed_tweets_counter = 0
 
     print('There are %s tweets to process.' % all_tweets_count)
     print('Starting...')
 
     while len(tweets) != 0:
-        tweets_text = list(map(lambda tweet: tweet.text, tweets))
-
+        select_time = time.time() - start
         start = time.time()
+        # tweets = [tweet for tweet in tweets if tweet.text is not None and tweet.text != ""]
+        tweets_text = [tweet.text for tweet in tweets]
         result_sentiment = sentiment_classifier.predict(tweets_text)
         result_political_option = political_classifier.predict(tweets_text)
-        end = time.time()
-        print('Predict %s tweets time: %s' % (n, (end - start)))
-
+        prediction_time = time.time() - start
+        start = time.time()
         for i, tweet in enumerate(tweets):
             tweet.sentiment = result_sentiment[i].value
             tweet.sentiment_confidence = result_sentiment[i].score
             tweet.political_views = result_political_option[i].value
             tweet.political_views_confidence = result_political_option[i].score
 
-        start = time.time()
         tweet_prediction_bulk_update(tweets)
-        end = time.time()
-        print('Save %s tweets time: %s' % (n, (end - start)))
-
-        processed_tweets_counter += n
-        print('%s/%s' % (processed_tweets_counter, all_tweets_count))
-
+        update_time = time.time() - start
         start = time.time()
-        tweets = select_sample_tweets_no_sentiment_no_political_views()
-        end = time.time()
-        print('Read next %s tweets time: %s' % (n, (end - start)))
+        processed_tweets_counter += len(tweets)
+        print('%s/%s' % (processed_tweets_counter, all_tweets_count))
+        print('Select speed: %.2f tweets/s' % (batch_size/select_time))
+        print('Prediction speed: %.2f tweets/s' % (batch_size/prediction_time))
+        print('Update speed: %.2f tweets/s' % (batch_size/update_time))
+        tweets = select_sample_tweets_no_sentiment_no_political_views(batch_size)
 
     print('All %s tweets processed.' % processed_tweets_counter)
