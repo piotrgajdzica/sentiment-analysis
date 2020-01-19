@@ -106,3 +106,5 @@ venv.bak/
 
 .idea
 twitterapi/db/database_access.py
+/trainmodel/political_views/data/tagger_political_views/best-model.pt
+/trainmodel/sentiment/data/tagger_sentiment/best-model.pt
