@@ -42,6 +42,11 @@ class Tweet(BaseModel):
     quoted_from_user = ForeignKeyField(User, backref='quotes', null=True)
     quoted_from = ForeignKeyField('self', backref='quotes', null=True)
 
+    sentiment = CharField(max_length=31, null=True)
+    sentiment_confidence = FloatField()
+    political_views = CharField(max_length=31, null=True)
+    political_views_confidence = FloatField()
+
 
 class UserMentions(BaseModel):
     tweet = ForeignKeyField(Tweet, on_delete='CASCADE', backref='usermentions')
@@ -99,7 +104,6 @@ def create_tweet_object(tweet, user, retweeted_from_user):
 
 
 def add_bulk_tweets_and_users(tweets):
-
     users_to_insert = {}
     tweets_to_insert = {}
 
@@ -118,7 +122,6 @@ def add_bulk_tweets_and_users(tweets):
 
 
 def add_tweet(tweet):
-
     if not hasattr(tweet, 'has_video'):
         tweet.has_video = False
     if not hasattr(tweet, 'has_image'):
@@ -164,11 +167,11 @@ def add_user(user):
 
 
 def select_minimal_user_ids():
-    return set([user.id for user in User.select(User.id).where(User.full_name==None)])
+    return set([user.id for user in User.select(User.id).where(User.full_name == None)])
 
 
 def select_minimal_users(ids):
-    return set([user for user in User.select().where(User.full_name==None and User.id in ids)])
+    return set([user for user in User.select().where(User.full_name == None and User.id in ids)])
 
 
 def select_all_users():
@@ -196,30 +199,37 @@ def select_all_urls():
 
 
 def select_retweets_edges(start, end, limit):
-    return Tweet.select(Tweet.user, Tweet.retweeted_from_user, fn.COUNT(Tweet.user).alias('count')).\
+    return Tweet.select(Tweet.user, Tweet.retweeted_from_user, fn.COUNT(Tweet.user).alias('count')). \
         where(Tweet.is_retweet). \
         where(Tweet.timestamp < end, Tweet.timestamp > start). \
         group_by(Tweet.user, Tweet.retweeted_from_user).limit(limit)
 
 
 def select_quotes_edges(start, end, limit):
-    return Tweet.select(Tweet.user, Tweet.quoted_from_user, fn.COUNT(Tweet.user).alias('count')).\
-        where(Tweet.quoted_from, Tweet.timestamp < end, Tweet.timestamp > start).\
+    return Tweet.select(Tweet.user, Tweet.quoted_from_user, fn.COUNT(Tweet.user).alias('count')). \
+        where(Tweet.quoted_from, Tweet.timestamp < end, Tweet.timestamp > start). \
         group_by(Tweet.user, Tweet.quoted_from_user).limit(limit)
 
 
 def select_mentions_edges(start, end, limit):
-    return UserMentions.select(UserMentions.user, Tweet.user, fn.COUNT(UserMentions.user).alias('count')).\
-        join(Tweet).\
-        where(Tweet.timestamp < end, Tweet.timestamp > start).\
+    return UserMentions.select(UserMentions.user, Tweet.user, fn.COUNT(UserMentions.user).alias('count')). \
+        join(Tweet). \
+        where(Tweet.timestamp < end, Tweet.timestamp > start). \
         group_by(Tweet.user, UserMentions.user).limit(limit)
 
 
 def select_hashtags_edges(start, end, limit):
-    return HashtagTweet.select(Tweet.user, HashtagTweet.hashtag, fn.COUNT(HashtagTweet.hashtag).alias('count')).\
+    return HashtagTweet.select(Tweet.user, HashtagTweet.hashtag, fn.COUNT(HashtagTweet.hashtag).alias('count')). \
         join(Tweet). \
         where(Tweet.timestamp < end, Tweet.timestamp > start). \
         group_by(Tweet.user, HashtagTweet.hashtag).limit(limit)
+
+
+def select_raw_hashtag_edges(limit):
+    return (HashtagTweet.select(HashtagTweet.hashtag, HashtagTweet.tweet_id, Hashtag.text)
+            .join(Hashtag)
+            .order_by(HashtagTweet.tweet)
+            .limit(limit))
 
 
 def add_bulk_objects(users, tweets, hashtags, urls, mentions):
@@ -237,14 +247,14 @@ def add_bulk_objects(users, tweets, hashtags, urls, mentions):
         user.lists = users[user.id].lists
         user.is_verified = users[user.id].is_verified
     User.bulk_update(minimal_users, [
-            User.full_name,
-            User.location,
-            User.date_joined,
-            User.followers,
-            User.likes,
-            User.lists,
-            User.is_verified,
-        ], 1000)
+        User.full_name,
+        User.location,
+        User.date_joined,
+        User.followers,
+        User.likes,
+        User.lists,
+        User.is_verified,
+    ], 1000)
 
     tweet_ids = set([tweet.id for tweet in Tweet.select(Tweet.id)])
     tweets_to_insert = [tweet for tweet in tweets.values() if tweet.id not in tweet_ids]
