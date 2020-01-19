@@ -182,9 +182,15 @@ def select_all_users():
 def select_all_tweets():
     return Tweet.select()
 
+def select_sample_tweets_no_sentiment_no_political_views(n=100):
+    return Tweet.select().where(Tweet.sentiment == None and Tweet.political_views == None).limit(n)
+
 
 def select_sample_tweets(n=100):
     return Tweet.select().order_by(fn.Rand()).limit(n)
+
+def count_tweets_no_sentiment_no_political_views():
+    return Tweet.select().where(Tweet.sentiment == None and Tweet.political_views == None).count()
 
 
 def select_all_hashtags():
