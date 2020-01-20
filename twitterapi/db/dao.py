@@ -183,7 +183,7 @@ def select_all_tweets():
     return Tweet.select()
 
 def select_sample_tweets_no_sentiment_no_political_views(n=100):
-    return Tweet.select().where(Tweet.sentiment == None and Tweet.political_views == None and Tweet.text != '').limit(n)
+    return Tweet.select().where(Tweet.sentiment == None, Tweet.political_views == None, Tweet.text != '').limit(n)
 
 
 def select_sample_tweets(n=100):

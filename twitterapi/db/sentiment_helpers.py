@@ -16,7 +16,7 @@ def set_tweet_political_views(tweet: Tweet, value: str, confidence: float):
 
 
 def tweet_prediction_bulk_update(tweets: List[Tweet]):
-    Tweet.bulk_update(tweets, fields=[Tweet.sentiment, Tweet.sentiment_confidence,
+    return Tweet.bulk_update(tweets, fields=[Tweet.sentiment, Tweet.sentiment_confidence,
                                       Tweet.political_views, Tweet.political_views_confidence])
 
 
